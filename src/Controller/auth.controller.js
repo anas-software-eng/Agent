@@ -3,6 +3,44 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const auth = require('../model/auth.schema');
 
+const dotenv = require('dotenv');
+dotenv.config();
+
+// --------------------------  ADMIN ----------------------------------------------
+const createAdmin = async () => {
+  try {
+    const adminEmail = process.env.ADMIN_EMAIL?.toLowerCase().trim();
+    const adminPassword = process.env.ADMIN_PASSWORD;
+
+    if (!adminEmail || !adminPassword) {
+      console.log("ADMIN_EMAIL or ADMIN_PASSWORD is missing");
+      return;
+    }
+
+    const existingAdmin = await auth.findOne({ email: adminEmail });
+
+    if (existingAdmin) {
+      console.log("Admin already exists");
+      return;
+    }
+
+    const hashedPassword = await bcrypt.hash(adminPassword, 10);
+
+    const admin = await auth.create({
+      name: "Admin",
+      email: adminEmail,
+      password: hashedPassword,
+      role: "admin",
+    });
+
+    console.log(`Admin created: ${admin.email}`);
+  } catch (error) {
+    console.error("Error creating admin:", error.message);
+  }
+};
+
+
+
 // -------------------------- REGISTER ----------------------------------------------
 
 const register = async (req, res) => {
@@ -118,4 +156,4 @@ const me = async (req, res) => {
 };
 
 
-module.exports = { register, login, logout, me };
+module.exports = { register, login, logout, me , createAdmin};
